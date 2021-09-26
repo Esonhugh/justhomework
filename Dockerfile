@@ -1,4 +1,4 @@
-FROM 3.9.7-buster
+FROM python:3.9.7-buster
 WORKDIR /app
 COPY . .
 RUN python3 -m pipenv install
