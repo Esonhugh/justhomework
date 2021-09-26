@@ -1,0 +1,34 @@
+<html>
+    <head>
+        <title>Broken ice API Server</title>
+    </head>
+    <body>
+        <style>
+            div {
+                white-space: pre-wrap;
+            }
+        </style>
+        <div>
+            <center>
+                <h1>Your Api Server is On</h1>
+                <h1>Api help list</h1>
+            <table>
+                <tr>
+                    <td>Api Address</td>
+                    <td>Api request method</td>
+                    <td>Api vars you need send in request</td>
+                    <td>Api returns</td>
+                </tr>
+                {% for url in urls %}
+                <tr>
+                    <td>{{ url["url"] }}</td>
+                    <td>{{ url["method"] }}</td>
+                    <td>{{ url["varlist"] }}</td>
+                    <td>{{ url["return"] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            </center>
+        </div>
+    </body>
+</html>

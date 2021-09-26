@@ -1,0 +1,42 @@
+└─$ curl http://127.0.0.1:5000/question -v                                                                                                                 
+*   Trying 127.0.0.1:5000...
+* Connected to 127.0.0.1 (127.0.0.1) port 5000 (#0)
+> GET /question HTTP/1.1
+> Host: 127.0.0.1:5000
+> User-Agent: curl/7.74.0
+> Accept: */*
+> 
+* Mark bundle as not supporting multiuse
+* HTTP 1.0, assume close after body
+< HTTP/1.0 200 OK
+< Content-Type: application/json
+< Content-Length: 48
+< Set-Cookie: token=j2SnOSvyIYPSuHddnja3JmymGVYllSpe2GRpxbm9fqM6X8SxK1rgDnE/V4NBPMoy6frMZ4wvl6NL+tGHqz41; Path=/
+< Server: Werkzeug/2.0.1 Python/3.9.7
+< Date: Sun, 26 Sep 2021 14:46:09 GMT
+< 
+* Closing connection 0
+{"image": "User6", "name": ["6", "7", "3", "5"]}                                                                                                                                                                                                                 
+└─$ curl http://127.0.0.1:5000/checkAnswer -d "answer=6" -b "token=j2SnOSvyIYPSuHddnja3JmymGVYllSpe2GRpxbm9fqM6X8SxK1rgDnE/V4NBPMoy6frMZ4wvl6NL+tGHqz41" -v  
+*   Trying 127.0.0.1:5000...
+* Connected to 127.0.0.1 (127.0.0.1) port 5000 (#0)
+> POST /checkAnswer HTTP/1.1
+> Host: 127.0.0.1:5000
+> User-Agent: curl/7.74.0
+> Accept: */*
+> Cookie: token=j2SnOSvyIYPSuHddnja3JmymGVYllSpe2GRpxbm9fqM6X8SxK1rgDnE/V4NBPMoy6frMZ4wvl6NL+tGHqz41
+> Content-Length: 8
+> Content-Type: application/x-www-form-urlencoded
+> 
+* upload completely sent off: 8 out of 8 bytes
+* Mark bundle as not supporting multiuse
+* HTTP 1.0, assume close after body
+< HTTP/1.0 200 OK
+< Content-Type: application/json
+< Content-Length: 19
+< Server: Werkzeug/2.0.1 Python/3.9.7
+< Date: Sun, 26 Sep 2021 14:46:37 GMT
+< 
+{"iscorrect":true}
+* Closing connection 0
+
