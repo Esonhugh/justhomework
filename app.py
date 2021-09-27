@@ -1,13 +1,21 @@
+#! /bin/python3
+# base lib
 import secrets, random, os
-from misc import *
-from flask import Flask, render_template, request, Response, jsonify
 import json
+# foreign lib
+from flask import Flask, render_template, request, Response, jsonify
+from flask_sqlalchemy import SQLAlchemy
+# custom lib
+from misc import *
 
+# key generate for start also can read config file to do so.
 secret_base = secrets.token_urlsafe(32)
 session_rc4_key = secret_base  # future feature
 
-print(session_rc4_key)
+# print the session communication key for debug
+# print(session_rc4_key)
 
+# init app
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = \
     'sqlite:////' + os.path.join(app.root_path, 'data.db')
@@ -15,82 +23,110 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)  # ORM sqlite db
 
-
+# db model User
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20))
     image = db.Column(db.String(100))
 
-
+# flask command to create db
 @app.cli.command()
 def initdb():
     db.create_all()
 
+# / path for api help docs
+# no input
+# no return
 @app.route('/')
 def hello_world():  # put application's code here
     return render_template('apiHelp.html',urls=urldata)
 
+# /question path get question
+# no input
+# return json
+# {
+#   'image': 'image url',
+#   'name': ['name1',...] # default is name{1,4}
+# }
 @app.route('/question',methods=['GET'])
 def getQuestions():
+    # gen name lists by id lists
     people_max = User.query.count()
     lists = [i for i in range(1,people_max+1)]
     chosen_people_id = random.sample(lists,4)
+
+    # set the true answer
     answer_user = User.query.get(chosen_people_id[0])
     answer_user_info = [chosen_people_id[0],answer_user.name,answer_user.image]
-
-    print("infolist",answer_user_info)
+    # print("infolist",answer_user_info)
     check = {
         'id': answer_user.id,
         'true_user_hash': hash(str(answer_user_info)) # just for sure data no changed (even the hacker get keys)
     }
-
-    print("check raw",check)
+    # print("check raw",check)
     token = encrypt(json.dumps(check),session_rc4_key)
-    print("token",token)
+    # print("token",token)
 
+    # generate user name lists
     fake_user = [ User.query.get(chosen_people_id[i]) for i in range(1,4) ]
-
     name_list = []
     name_list.append(answer_user.name)
     for every_fack_user in fake_user:
         name_list.append(every_fack_user.name)
 
+    # make response
     res = {
-        'image' : answer_user.image ,
-        'name' : name_list
+        'image': answer_user.image ,
+        'name': name_list
     }
-
-    print(res)
-    json.dumps(res)
-    resp = Response(json.dumps(res), mimetype='application/json')
+    resp = Response(json.dumps(res) ,mimetype='application/json')
+    # set true answer as token in cookie
     resp.set_cookie(key="token",value=token)
+
     return resp
 
-
-@app.route('/checkAnswer',methods=['POST'])
+# /answer path post answer
+# input post param & cookie
+#   answer=<username user answered>
+#   cookie: token=<token from get question
+# return json
+# {
+#   "iscorrect":Ture/False
+# }
+@app.route('/answer',methods=['POST'])
 def checkAnswer():
+    # get the answer
     answer = request.form.get('answer')
-    res = {"iscorrect":False}
+    # get the token(contain true answer)
     token = request.cookies.get('token')
+    # make response
+    res = {"iscorrect":False}
     try:
-        real_answer = json.loads(decrypt(token,session_rc4_key))
-        answered_user = User.query.get(real_answer['id'])
-        answered_user_info = [answered_user.id ,answered_user.name,answered_user.image] 
+        # decode the true answer
+        true_answer_json = json.loads(decrypt(token,session_rc4_key))
+        true_answer_user = User.query.get(true_answer_json['id'])
+        true_answer_user_info = [true_answer_user.id ,true_answer_user.name,true_answer_user.image]
 
-
-
-
-        answer_true = answered_user.name == answer
-        answer_no_change = hash(str(answered_user_info)) == real_answer['true_user_hash']
+        # verify answer
+        answer_true = true_answer_user.name == answer
+        answer_no_change = hash(str(true_answer_user_info)) == true_answer_json['true_user_hash']
         if ( answer_true and answer_no_change ):
             res = {"iscorrect":True}
+
     except :
         pass
     finally:
         return jsonify(res)
 
-
-@app.route('/uploadData',methods=['POST'])
+# /userdata path post userdata
+# input post param
+#   user=username
+#   image_url=user image
+# return json
+# {
+#   "upload": "success"/"fail"
+# }
+@app.route('/userdata',methods=['POST'])
 def upload():
     username = request.form.get('user')
     image_url = request.form.get('image_url')
@@ -101,20 +137,30 @@ def upload():
         db.session.add(new_user)
         db.session.commit()
         print("commit")
-        res = {"upload":"true"}
+        res = {"upload":"success"}
     except:
         res = {"upload":"fail"}
     finally:
         return jsonify(res)
 
-@app.route('/reinitdb')
+# bad api access for clean the database
+# /reinitdb path for restart database
+# no input
+# return json
+# {
+#   "state": "success"/"fail"
+# }
+@app.route('/reinitdb',methods=['DELETE'])
 def reinitdb():
+    res = {"state":"fail"}
     try:
         db.drop_all()
         db.create_all()
-        return "success"
+        res = {"state":"success"}
     except:
-        return "fail"
+        pass
+    finally:
+        return jsonify(res)
 
 
 if __name__ == '__main__':

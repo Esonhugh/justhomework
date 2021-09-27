@@ -4,7 +4,6 @@ from Crypto.Cipher import ARC4
 from hashlib import md5
 from base64 import b64decode,b64encode
 
-from flask_sqlalchemy import SQLAlchemy
 
 def debug(a):
     print(a,type(a))
@@ -34,16 +33,16 @@ urldata = [
         "url": "/question",
         "method": "GET",
         "varlist": "None",
-        "return": "json: question[4] curl it to test"
+        "return": "json"
     },
     {
-        "url": "/checkAnswer",
+        "url": "/answer",
         "method": "POST",
         "varlist": "post:answer(the use name)",
         "return": "json"
     },
     {
-        "url":"/uploadData",
+        "url":"/userdata",
         "method": "POST",
         "varlist": "user=username&image_url=image_url",
         "return": "json"
