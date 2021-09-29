@@ -1,9 +1,11 @@
 #! /bin/python3
 # base lib
+import html
 import secrets, random, os
 import json
 # foreign lib
 from flask import Flask, render_template, request, Response, jsonify
+from flask_api import  status
 from flask_sqlalchemy import SQLAlchemy
 # custom lib
 from misc import *
@@ -52,6 +54,13 @@ def hello_world():  # put application's code here
 def getQuestions():
     # gen name lists by id lists
     people_max = User.query.count()
+    if people_max <= 4:
+        leak_info = {
+            "image": "leak info",
+            "name": [None,None,None,None]
+        }
+        return jsonify(leak_info), status.HTTP_500_INTERNAL_SERVER_ERROR
+
     lists = [i for i in range(1,people_max+1)]
     chosen_people_id = random.sample(lists,4)
 
@@ -70,13 +79,13 @@ def getQuestions():
     # generate user name lists
     fake_user = [ User.query.get(chosen_people_id[i]) for i in range(1,4) ]
     name_list = []
-    name_list.append(answer_user.name)
+    name_list.append( html.escape(answer_user.name) )
     for every_fack_user in fake_user:
-        name_list.append(every_fack_user.name)
+        name_list.append( html.escape(every_fack_user.name) )
 
     # make response
     res = {
-        'image': answer_user.image ,
+        'image': html.escape(answer_user.image) ,
         'name': name_list
     }
     resp = Response(json.dumps(res) ,mimetype='application/json')
@@ -150,7 +159,7 @@ def upload():
 # {
 #   "state": "success"/"fail"
 # }
-@app.route('/reinitdb',methods=['DELETE'])
+@app.cli.command()
 def reinitdb():
     res = {"state":"fail"}
     try:
@@ -160,7 +169,7 @@ def reinitdb():
     except:
         pass
     finally:
-        return jsonify(res)
+        return print(res)
 
 
 if __name__ == '__main__':
