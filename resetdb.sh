@@ -1,4 +1,4 @@
-export url="http://kali.esonhugh.me:8080/"
+export url="http://kali.esonhugh.me:8080"
 curl "$url/" -v
 echo "api usage"
 sleep 2s
